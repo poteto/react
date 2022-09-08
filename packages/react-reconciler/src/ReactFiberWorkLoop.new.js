@@ -1492,10 +1492,6 @@ export function getExecutionContext(): ExecutionContext {
   return executionContext;
 }
 
-export function isCurrentlyRendering(): boolean {
-  return (executionContext & (RenderContext | CommitContext)) !== NoContext;
-}
-
 export function deferredUpdates<A>(fn: () => A): A {
   const previousPriority = getCurrentUpdatePriority();
   const prevTransition = ReactCurrentBatchConfig.transition;

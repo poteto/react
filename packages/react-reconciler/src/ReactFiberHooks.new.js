@@ -77,6 +77,7 @@ import {
   Layout as HookLayout,
   Passive as HookPassive,
   Insertion as HookInsertion,
+  Snapshot as HookSnapshot,
 } from './ReactHookEffectTags';
 import {
   getWorkInProgressRoot,
@@ -1784,7 +1785,7 @@ function updateEffect(
   return updateEffectImpl(PassiveEffect, HookPassive, create, deps);
 }
 
-function mountEvent<T>(callback: T): T {
+function mountEvent<T>(callback: () => T): () => T {
   const hook = mountWorkInProgressHook();
   const ref = {current: callback};
 
@@ -1797,7 +1798,7 @@ function mountEvent<T>(callback: T): T {
 
   mountEffectImpl(
     UpdateEffect,
-    HookInsertion,
+    HookSnapshot,
     () => {
       ref.current = callback;
     },
@@ -1809,7 +1810,7 @@ function mountEvent<T>(callback: T): T {
   return event;
 }
 
-function updateEvent<T>(callback: T): T {
+function updateEvent<T>(callback: () => T): () => T {
   const hook = updateWorkInProgressHook();
   const ref = hook.memoizedState[0];
 
@@ -2660,7 +2661,7 @@ if (__DEV__) {
       checkDepsAreArrayDev(deps);
       return mountEffect(create, deps);
     },
-    useEvent<T>(callback: T): T {
+    useEvent<T>(callback: () => T): () => T {
       currentHookNameInDev = 'useEvent';
       mountHookTypesDev();
       return mountEvent(callback);
@@ -2817,7 +2818,7 @@ if (__DEV__) {
       updateHookTypesDev();
       return mountEffect(create, deps);
     },
-    useEvent<T>(callback: T): T {
+    useEvent<T>(callback: () => T): () => T {
       currentHookNameInDev = 'useEvent';
       updateHookTypesDev();
       return mountEvent(callback);
@@ -2970,7 +2971,7 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateEffect(create, deps);
     },
-    useEvent<T>(callback: T): T {
+    useEvent<T>(callback: () => T): () => T {
       currentHookNameInDev = 'useEvent';
       updateHookTypesDev();
       return updateEvent(callback);
@@ -3124,7 +3125,7 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateEffect(create, deps);
     },
-    useEvent<T>(callback: T): T {
+    useEvent<T>(callback: () => T): () => T {
       currentHookNameInDev = 'useEvent';
       updateHookTypesDev();
       return updateEvent(callback);
@@ -3281,7 +3282,7 @@ if (__DEV__) {
       mountHookTypesDev();
       return mountEffect(create, deps);
     },
-    useEvent<T>(callback: T): T {
+    useEvent<T>(callback: () => T): () => T {
       currentHookNameInDev = 'useEvent';
       warnInvalidHookAccess();
       mountHookTypesDev();
@@ -3462,7 +3463,7 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateEffect(create, deps);
     },
-    useEvent<T>(callback: T): T {
+    useEvent<T>(callback: () => T): () => T {
       currentHookNameInDev = 'useEvent';
       warnInvalidHookAccess();
       updateHookTypesDev();
@@ -3644,7 +3645,7 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateEffect(create, deps);
     },
-    useEvent<T>(callback: T): T {
+    useEvent<T>(callback: () => T): () => T {
       currentHookNameInDev = 'useEvent';
       warnInvalidHookAccess();
       updateHookTypesDev();
