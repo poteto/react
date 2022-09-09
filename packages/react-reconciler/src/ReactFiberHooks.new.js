@@ -35,6 +35,7 @@ import {
   enableTransitionTracing,
   enableUseHook,
   enableUseMemoCacheHook,
+  enableUseEventHook,
 } from 'shared/ReactFeatureFlags';
 import {REACT_CONTEXT_TYPE} from 'shared/ReactSymbols';
 
@@ -2477,7 +2478,6 @@ export const ContextOnlyDispatcher: Dispatcher = {
   useCallback: throwInvalidHookError,
   useContext: throwInvalidHookError,
   useEffect: throwInvalidHookError,
-  useEvent: throwInvalidHookError,
   useImperativeHandle: throwInvalidHookError,
   useInsertionEffect: throwInvalidHookError,
   useLayoutEffect: throwInvalidHookError,
@@ -2505,6 +2505,9 @@ if (enableUseHook) {
 if (enableUseMemoCacheHook) {
   (ContextOnlyDispatcher: Dispatcher).useMemoCache = throwInvalidHookError;
 }
+if (enableUseEventHook) {
+  (ContextOnlyDispatcher: Dispatcher).useEvent = throwInvalidHookError;
+}
 
 const HooksDispatcherOnMount: Dispatcher = {
   readContext,
@@ -2512,7 +2515,6 @@ const HooksDispatcherOnMount: Dispatcher = {
   useCallback: mountCallback,
   useContext: readContext,
   useEffect: mountEffect,
-  useEvent: mountEvent,
   useImperativeHandle: mountImperativeHandle,
   useLayoutEffect: mountLayoutEffect,
   useInsertionEffect: mountInsertionEffect,
@@ -2540,13 +2542,15 @@ if (enableUseHook) {
 if (enableUseMemoCacheHook) {
   (HooksDispatcherOnMount: Dispatcher).useMemoCache = useMemoCache;
 }
+if (enableUseEventHook) {
+  (HooksDispatcherOnMount: Dispatcher).useEvent = mountEvent;
+}
 const HooksDispatcherOnUpdate: Dispatcher = {
   readContext,
 
   useCallback: updateCallback,
   useContext: readContext,
   useEffect: updateEffect,
-  useEvent: updateEvent,
   useImperativeHandle: updateImperativeHandle,
   useInsertionEffect: updateInsertionEffect,
   useLayoutEffect: updateLayoutEffect,
@@ -2574,6 +2578,9 @@ if (enableUseMemoCacheHook) {
 if (enableUseHook) {
   (HooksDispatcherOnUpdate: Dispatcher).use = use;
 }
+if (enableUseEventHook) {
+  (HooksDispatcherOnUpdate: Dispatcher).useEvent = updateEvent;
+}
 
 const HooksDispatcherOnRerender: Dispatcher = {
   readContext,
@@ -2581,7 +2588,6 @@ const HooksDispatcherOnRerender: Dispatcher = {
   useCallback: updateCallback,
   useContext: readContext,
   useEffect: updateEffect,
-  useEvent: updateEvent,
   useImperativeHandle: updateImperativeHandle,
   useInsertionEffect: updateInsertionEffect,
   useLayoutEffect: updateLayoutEffect,
@@ -2608,6 +2614,9 @@ if (enableUseHook) {
 }
 if (enableUseMemoCacheHook) {
   (HooksDispatcherOnRerender: Dispatcher).useMemoCache = useMemoCache;
+}
+if (enableUseEventHook) {
+  (HooksDispatcherOnRerender: Dispatcher).useEvent = updateEvent;
 }
 
 let HooksDispatcherOnMountInDEV: Dispatcher | null = null;
@@ -2660,11 +2669,6 @@ if (__DEV__) {
       mountHookTypesDev();
       checkDepsAreArrayDev(deps);
       return mountEffect(create, deps);
-    },
-    useEvent<T>(callback: () => T): () => T {
-      currentHookNameInDev = 'useEvent';
-      mountHookTypesDev();
-      return mountEvent(callback);
     },
     useImperativeHandle<T>(
       ref: {|current: T | null|} | ((inst: T | null) => mixed) | null | void,
@@ -2795,6 +2799,15 @@ if (__DEV__) {
   if (enableUseMemoCacheHook) {
     (HooksDispatcherOnMountInDEV: Dispatcher).useMemoCache = useMemoCache;
   }
+  if (enableUseEventHook) {
+    (HooksDispatcherOnMountInDEV: Dispatcher).useEvent = function useEvent<T>(
+      callback: () => T,
+    ): () => T {
+      currentHookNameInDev = 'useEvent';
+      mountHookTypesDev();
+      return mountEvent(callback);
+    };
+  }
 
   HooksDispatcherOnMountWithHookTypesInDEV = {
     readContext<T>(context: ReactContext<T>): T {
@@ -2817,11 +2830,6 @@ if (__DEV__) {
       currentHookNameInDev = 'useEffect';
       updateHookTypesDev();
       return mountEffect(create, deps);
-    },
-    useEvent<T>(callback: () => T): () => T {
-      currentHookNameInDev = 'useEvent';
-      updateHookTypesDev();
-      return mountEvent(callback);
     },
     useImperativeHandle<T>(
       ref: {|current: T | null|} | ((inst: T | null) => mixed) | null | void,
@@ -2948,6 +2956,15 @@ if (__DEV__) {
   if (enableUseMemoCacheHook) {
     (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).useMemoCache = useMemoCache;
   }
+  if (enableUseEventHook) {
+    (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).useEvent = function useEvent<
+      T,
+    >(callback: () => T): () => T {
+      currentHookNameInDev = 'useEvent';
+      updateHookTypesDev();
+      return mountEvent(callback);
+    };
+  }
 
   HooksDispatcherOnUpdateInDEV = {
     readContext<T>(context: ReactContext<T>): T {
@@ -2970,11 +2987,6 @@ if (__DEV__) {
       currentHookNameInDev = 'useEffect';
       updateHookTypesDev();
       return updateEffect(create, deps);
-    },
-    useEvent<T>(callback: () => T): () => T {
-      currentHookNameInDev = 'useEvent';
-      updateHookTypesDev();
-      return updateEvent(callback);
     },
     useImperativeHandle<T>(
       ref: {|current: T | null|} | ((inst: T | null) => mixed) | null | void,
@@ -3101,6 +3113,15 @@ if (__DEV__) {
   if (enableUseMemoCacheHook) {
     (HooksDispatcherOnUpdateInDEV: Dispatcher).useMemoCache = useMemoCache;
   }
+  if (enableUseEventHook) {
+    (HooksDispatcherOnUpdateInDEV: Dispatcher).useEvent = function useEvent<T>(
+      callback: () => T,
+    ): () => T {
+      currentHookNameInDev = 'useEvent';
+      updateHookTypesDev();
+      return updateEvent(callback);
+    };
+  }
 
   HooksDispatcherOnRerenderInDEV = {
     readContext<T>(context: ReactContext<T>): T {
@@ -3124,11 +3145,6 @@ if (__DEV__) {
       currentHookNameInDev = 'useEffect';
       updateHookTypesDev();
       return updateEffect(create, deps);
-    },
-    useEvent<T>(callback: () => T): () => T {
-      currentHookNameInDev = 'useEvent';
-      updateHookTypesDev();
-      return updateEvent(callback);
     },
     useImperativeHandle<T>(
       ref: {|current: T | null|} | ((inst: T | null) => mixed) | null | void,
@@ -3255,6 +3271,15 @@ if (__DEV__) {
   if (enableUseMemoCacheHook) {
     (HooksDispatcherOnRerenderInDEV: Dispatcher).useMemoCache = useMemoCache;
   }
+  if (enableUseEventHook) {
+    (HooksDispatcherOnRerenderInDEV: Dispatcher).useEvent = function useEvent<
+      T,
+    >(callback: () => T): () => T {
+      currentHookNameInDev = 'useEvent';
+      updateHookTypesDev();
+      return updateEvent(callback);
+    };
+  }
 
   InvalidNestedHooksDispatcherOnMountInDEV = {
     readContext<T>(context: ReactContext<T>): T {
@@ -3281,12 +3306,6 @@ if (__DEV__) {
       warnInvalidHookAccess();
       mountHookTypesDev();
       return mountEffect(create, deps);
-    },
-    useEvent<T>(callback: () => T): () => T {
-      currentHookNameInDev = 'useEvent';
-      warnInvalidHookAccess();
-      mountHookTypesDev();
-      return mountEvent(callback);
     },
     useImperativeHandle<T>(
       ref: {|current: T | null|} | ((inst: T | null) => mixed) | null | void,
@@ -3436,6 +3455,16 @@ if (__DEV__) {
       return useMemoCache(size);
     };
   }
+  if (enableUseEventHook) {
+    (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).useEvent = function useEvent<
+      T,
+    >(callback: () => T): () => T {
+      currentHookNameInDev = 'useEvent';
+      warnInvalidHookAccess();
+      mountHookTypesDev();
+      return mountEvent(callback);
+    };
+  }
 
   InvalidNestedHooksDispatcherOnUpdateInDEV = {
     readContext<T>(context: ReactContext<T>): T {
@@ -3462,12 +3491,6 @@ if (__DEV__) {
       warnInvalidHookAccess();
       updateHookTypesDev();
       return updateEffect(create, deps);
-    },
-    useEvent<T>(callback: () => T): () => T {
-      currentHookNameInDev = 'useEvent';
-      warnInvalidHookAccess();
-      updateHookTypesDev();
-      return updateEvent(callback);
     },
     useImperativeHandle<T>(
       ref: {|current: T | null|} | ((inst: T | null) => mixed) | null | void,
@@ -3617,6 +3640,16 @@ if (__DEV__) {
       return useMemoCache(size);
     };
   }
+  if (enableUseEventHook) {
+    (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).useEvent = function useEvent<
+      T,
+    >(callback: () => T): () => T {
+      currentHookNameInDev = 'useEvent';
+      warnInvalidHookAccess();
+      updateHookTypesDev();
+      return updateEvent(callback);
+    };
+  }
 
   InvalidNestedHooksDispatcherOnRerenderInDEV = {
     readContext<T>(context: ReactContext<T>): T {
@@ -3644,12 +3677,6 @@ if (__DEV__) {
       warnInvalidHookAccess();
       updateHookTypesDev();
       return updateEffect(create, deps);
-    },
-    useEvent<T>(callback: () => T): () => T {
-      currentHookNameInDev = 'useEvent';
-      warnInvalidHookAccess();
-      updateHookTypesDev();
-      return updateEvent(callback);
     },
     useImperativeHandle<T>(
       ref: {|current: T | null|} | ((inst: T | null) => mixed) | null | void,
@@ -3797,6 +3824,16 @@ if (__DEV__) {
     ): Array<any> {
       warnInvalidHookAccess();
       return useMemoCache(size);
+    };
+  }
+  if (enableUseEventHook) {
+    (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).useEvent = function useEvent<
+      T,
+    >(callback: () => T): () => T {
+      currentHookNameInDev = 'useEvent';
+      warnInvalidHookAccess();
+      updateHookTypesDev();
+      return updateEvent(callback);
     };
   }
 }
