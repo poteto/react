@@ -419,23 +419,13 @@ describe('useEvent', () => {
         Scheduler.unstable_yieldValue('Event value: ' + value);
       });
 
-      return (
-        <>
-        </>
-      );
+      return <></>;
     }
 
     ReactNoop.render(<Counter value={1} />);
-    expect(Scheduler).toFlushAndYield([
-      'Effect value: 1',
-      'Event value: 1',
-    ]);
-
+    expect(Scheduler).toFlushAndYield(['Effect value: 1', 'Event value: 1']);
 
     act(() => ReactNoop.render(<Counter value={2} />));
-    expect(Scheduler).toHaveYielded([
-      'Effect value: 2',
-      'Event value: 2',
-    ]);
+    expect(Scheduler).toHaveYielded(['Effect value: 2', 'Event value: 2']);
   });
 });
