@@ -413,22 +413,15 @@ function commitBeforeMutationEffectsOnFiber(finishedWork: Fiber) {
   switch (finishedWork.tag) {
     case FunctionComponent: {
       if ((flags & Update) !== NoFlags) {
-        if (current !== null) {
-          // TODO: swap ref.current for useEvent;
-
-          try {
-            commitHookEffectListUnmount(
-              HookSnapshot | HookHasEffect,
-              finishedWork,
-              finishedWork.return,
-            );
-            commitHookEffectListMount(
-              HookSnapshot | HookHasEffect,
-              finishedWork,
-            );
-          } catch (error) {
-            captureCommitPhaseError(finishedWork, finishedWork.return, error);
-          }
+        try {
+          commitHookEffectListUnmount(
+            HookSnapshot | HookHasEffect,
+            finishedWork,
+            finishedWork.return,
+          );
+          commitHookEffectListMount(HookSnapshot | HookHasEffect, finishedWork);
+        } catch (error) {
+          captureCommitPhaseError(finishedWork, finishedWork.return, error);
         }
       }
       break;
@@ -518,6 +511,10 @@ function commitBeforeMutationEffectsOnFiber(finishedWork: Fiber) {
         );
       }
     }
+  }
+
+  if ((flags & Snapshot) !== NoFlags) {
+    resetCurrentDebugFiberInDEV();
   }
 }
 
