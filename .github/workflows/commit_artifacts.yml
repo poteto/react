@@ -1,0 +1,39 @@
+name: Commit Artifacts
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  download_artifacts:
+    runs-on: ubuntu-latest
+    steps:
+      - name: TODO RENAME ME
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const { repo, owner } = context.repo;
+            const statuses = github.rest.repos.getCommit({ owner, repo, ref: context.sha });
+            console.log(statuses);
+
+            # get build status for commit: https://api.github.com/repos/facebook/react/commits/${ref}/status
+            #   maybe use the scripting api for this?
+            # find process_artifacts_combined status, get the cirleci ID off of the target_url
+            #   eg https://api.github.com/repos/facebook/react/commits/56ffca8b9e4e49ad46136fe705203afc2d20fd9f/status
+            #   "target_url": "https://circleci.com/gh/facebook/react/589148",
+            # then hit circle to download the artifacts
+            #  https://circleci.com/api/v1.1/project/github/facebook/react/589148/artifacts
+            # maybe we can upload the artifact to github?
+            #  https://github.com/actions/upload-artifact
+      stuff
+
+  commit_artifacts:
+    runs-on: ubuntu-latest
+    steps: |
+      # maybe unzip the tgz then put it in a folder keyed by commit ref
+      #   cuz difftrain can't process the tgz
+      # git commit it to a separate branch
+      #
+      # elsewhere: would be nice to send a status to the pr if the difftrain ci was started and just say if any failures
+      s# detected (without any details)
