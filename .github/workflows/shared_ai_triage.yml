@@ -1,0 +1,113 @@
+name: (Shared) AI Triage
+
+on:
+  issues:
+    types: [opened]
+  workflow_dispatch:
+    inputs:
+      issue_id:
+        required: true
+        type: string
+        default: ''
+
+permissions: {}
+
+env:
+  TZ: /usr/share/zoneinfo/America/Los_Angeles
+  # https://github.com/actions/cache/blob/main/tips-and-workarounds.md#cache-segment-restore-timeout
+  SEGMENT_DOWNLOAD_TIMEOUT_MINS: 1
+
+jobs:
+  get_labels:
+    runs-on: ubuntu-latest
+    outputs:
+      labels: ${{ steps.fetch_labels.outputs.labels }}
+    steps:
+      - name: Install GitHub CLI
+        run: |
+          curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+          echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+          sudo apt update
+          sudo apt install gh -y
+
+      - name: Fetch all repository labels
+        id: fetch_labels
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          labels=$(gh label list --repo ${{ github.repository }} --limit 200 --json name,description | jq -c)
+          echo "labels=$labels" >> $GITHUB_OUTPUT
+          echo "Found $(echo $labels | jq length) labels"
+
+  triage_issue:
+    runs-on: ubuntu-latest
+    needs: get_labels
+    permissions:
+      # We use acitons/ai-inference
+      models: read
+    steps:
+      - name: Install GitHub CLI
+        run: |
+          curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+          echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+          sudo apt update
+          sudo apt install gh -y
+
+      - name: Fetch issue data
+        id: fetch_issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          issue_data=$(gh api repos/${{ github.repository }}/issues/33783)
+
+          # Use multiline output format for potentially multiline values
+          echo "issue_title<<EOF" >> $GITHUB_OUTPUT
+          echo "$issue_data" | jq -r .title >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+          echo "issue_body<<EOF" >> $GITHUB_OUTPUT
+          echo "$issue_data" | jq -r .body >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+          echo "issue_number=34074" >> $GITHUB_OUTPUT
+
+          echo "issue_author<<EOF" >> $GITHUB_OUTPUT
+          echo "$issue_data" | jq -r .user.login >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Run AI Inference with Prompt YAML
+        id: inference
+        uses: actions/ai-inference@b81b2afb8390ee6839b494a404766bef6493c7d9
+        with:
+          model: meta/Llama-4-Maverick-17B-128E-Instruct-FP8
+          prompt: |
+            You are an issue triage assistant for the facebook/react repo. Analyze the current GitHub
+            issue and apply the most appropriate existing labels. If the issue is missing a title,
+            or it is missing important information on how to reproduce the issue, apply the label "Needs more information".
+
+            If the issue body contains a codesandbox.io link, or a GitHub repo reproduction attached, or a playground.react.dev link, apply the label "Has Repro".
+
+              1. The available labels are here: ${{ needs.get_labels.outputs.labels }}.
+              2. Review the issue title and body: "${{ steps.fetch_issue.outputs.issue_title }}" and ${{ steps.fetch_issue.outputs.issue_body }}.
+              3. Select the most relevant labels from the existing labels.
+              4. Report what labels you think this issue should have. First write a short paragraph describing your high level summary of what this issue is reporting.
+              5. After this paragraph, only respond with the name of the labels and nothing else, as JSON. Do not respond with "To respond to this...". Examples:
+
+                {
+                  newLabels: [
+                    {"name": "Needs more information"},
+                    {"name": "Status: Unconfirmed"}
+                  ]
+                }
+          input: |
+            issue_title: ${{ steps.fetch_issue.outputs.issue_title }}
+            issue_body: ${{ steps.fetch_issue.outputs.issue_body }}
+            issue_author: ${{ steps.fetch_issue.outputs.issue_author }}
+            issue_number: ${{ steps.fetch_issue.outputs.issue_number }}
+            available_labels: ${{ needs.get_labels.outputs.labels }}
+      - name: Print Output
+        id: output
+        run: |
+          cat << 'EOF'
+          ${{ steps.inference.outputs.response }}
+          EOF
