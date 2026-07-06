@@ -4,16 +4,16 @@ Status snapshot (after the current stack lands):
 
 | Variant | Score        | Failures |
 | ------- | ------------ | -------- |
-| Babel   | 1792 / 1802  | 10       |
-| SWC     | 1786 / 1802  | 16       |
-| OXC     | 1704 / 1795  | 91       |
+| Babel   | 1804 / 1806  | 2        |
+| SWC     | 1794 / 1806  | 12       |
+| OXC     | 1715 / 1806  | 91       |
 
-The corpus grew by the three `ts-*` module-interop fixtures (1799 →
-1802 on this branch). The Babel/SWC rows are measured on this branch
-and their failure sets are byte-identical to the pre-stack baseline;
-the OXC row predates the fixtures and has not been re-measured.
+The corpus grew by the three `using`-declaration fixtures (1803 →
+1806 on this branch; both `using` kinds now bail with the same Todo as
+`var`). All three rows are re-measured on this branch; the remaining
+Babel/SWC failures are the documented pre-existing ones below.
 
-`cargo test --workspace`: 84 passed, 0 failed.
+`cargo test --workspace`: 85 passed, 0 failed.
 
 ## SWC
 
