@@ -622,7 +622,11 @@ impl<'a> ConvertCtx<'a> {
                 .iter()
                 .map(|d| self.convert_variable_declarator(d))
                 .collect(),
-            kind: VariableDeclarationKind::Using,
+            kind: if decl.is_await {
+                VariableDeclarationKind::AwaitUsing
+            } else {
+                VariableDeclarationKind::Using
+            },
             declare: None,
         }
     }

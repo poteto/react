@@ -462,6 +462,7 @@ impl<'a> ReverseCtx<'a> {
             VariableDeclarationKind::Let => oxc::VariableDeclarationKind::Let,
             VariableDeclarationKind::Const => oxc::VariableDeclarationKind::Const,
             VariableDeclarationKind::Using => oxc::VariableDeclarationKind::Using,
+            VariableDeclarationKind::AwaitUsing => oxc::VariableDeclarationKind::AwaitUsing,
         };
         let declarators = self.builder.vec_from_iter(
             decl.declarations

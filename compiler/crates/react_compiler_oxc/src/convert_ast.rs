@@ -551,10 +551,7 @@ impl<'a> ConvertCtx<'a> {
                 oxc::VariableDeclarationKind::Let => VariableDeclarationKind::Let,
                 oxc::VariableDeclarationKind::Const => VariableDeclarationKind::Const,
                 oxc::VariableDeclarationKind::Using => VariableDeclarationKind::Using,
-                oxc::VariableDeclarationKind::AwaitUsing => {
-                    // Map to Using for now
-                    VariableDeclarationKind::Using
-                }
+                oxc::VariableDeclarationKind::AwaitUsing => VariableDeclarationKind::AwaitUsing,
             },
             declare: if var.declare { Some(true) } else { None },
         }

@@ -741,7 +741,9 @@ impl ReverseCtx {
             babel_stmt::VariableDeclarationKind::Var => VarDeclKind::Var,
             babel_stmt::VariableDeclarationKind::Let => VarDeclKind::Let,
             babel_stmt::VariableDeclarationKind::Const => VarDeclKind::Const,
-            babel_stmt::VariableDeclarationKind::Using => VarDeclKind::Var, // SWC doesn't have Using
+            // SWC models using declarations as a separate Decl type, not a VarDeclKind
+            babel_stmt::VariableDeclarationKind::Using
+            | babel_stmt::VariableDeclarationKind::AwaitUsing => VarDeclKind::Var,
         };
         let decls = decl
             .declarations
