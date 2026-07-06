@@ -586,9 +586,13 @@ impl ReverseCtx {
                 obj: Box::new(self.convert_expression(&s.object)),
                 body: Box::new(self.convert_statement(&s.body)),
             }),
-            BabelStmt::VariableDeclaration(d) => {
-                Stmt::Decl(Decl::Var(Box::new(self.convert_variable_declaration(d))))
-            }
+            BabelStmt::VariableDeclaration(d) => match d.kind {
+                babel_stmt::VariableDeclarationKind::Using
+                | babel_stmt::VariableDeclarationKind::AwaitUsing => {
+                    Stmt::Decl(Decl::Using(Box::new(self.convert_using_declaration(d))))
+                }
+                _ => Stmt::Decl(Decl::Var(Box::new(self.convert_variable_declaration(d)))),
+            },
             BabelStmt::FunctionDeclaration(f) => {
                 Stmt::Decl(Decl::Fn(self.convert_function_declaration(f)))
             }
@@ -741,7 +745,8 @@ impl ReverseCtx {
             babel_stmt::VariableDeclarationKind::Var => VarDeclKind::Var,
             babel_stmt::VariableDeclarationKind::Let => VarDeclKind::Let,
             babel_stmt::VariableDeclarationKind::Const => VarDeclKind::Const,
-            // SWC models using declarations as a separate Decl type, not a VarDeclKind
+            // SWC models using declarations as a separate Decl type, not a
+            // VarDeclKind; statement position converts via convert_using_declaration
             babel_stmt::VariableDeclarationKind::Using
             | babel_stmt::VariableDeclarationKind::AwaitUsing => VarDeclKind::Var,
         };
@@ -757,6 +762,18 @@ impl ReverseCtx {
             kind,
             declare,
             decls,
+        }
+    }
+
+    fn convert_using_declaration(&self, decl: &babel_stmt::VariableDeclaration) -> UsingDecl {
+        UsingDecl {
+            span: self.span(&decl.base),
+            is_await: matches!(decl.kind, babel_stmt::VariableDeclarationKind::AwaitUsing),
+            decls: decl
+                .declarations
+                .iter()
+                .map(|d| self.convert_variable_declarator(d))
+                .collect(),
         }
     }
 

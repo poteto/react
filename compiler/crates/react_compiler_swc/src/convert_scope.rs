@@ -356,6 +356,22 @@ impl Visit for ScopeCollector {
         }
     }
 
+    fn visit_using_decl(&mut self, using_decl: &UsingDecl) {
+        // Babel reports `using`/`await using` bindings as const
+        for declarator in &using_decl.decls {
+            self.collect_pat_bindings(
+                &declarator.name,
+                BindingKind::Const,
+                self.current_scope(),
+                "VariableDeclarator",
+            );
+            // Visit initializers so nested functions/arrows get their scopes
+            if let Some(init) = &declarator.init {
+                init.visit_with(self);
+            }
+        }
+    }
+
     fn visit_fn_decl(&mut self, fn_decl: &FnDecl) {
         // Function declarations are hoisted to the enclosing function/program scope
         let hoist_scope = self.enclosing_function_scope();
@@ -761,6 +777,15 @@ impl<'a> Visit for ReferenceResolver<'a> {
     fn visit_var_decl(&mut self, var_decl: &VarDecl) {
         // Only visit initializers, not patterns (which are declarations)
         for declarator in &var_decl.decls {
+            if let Some(init) = &declarator.init {
+                init.visit_with(self);
+            }
+        }
+    }
+
+    fn visit_using_decl(&mut self, using_decl: &UsingDecl) {
+        // Only visit initializers, not patterns (which are declarations)
+        for declarator in &using_decl.decls {
             if let Some(init) = &declarator.init {
                 init.visit_with(self);
             }
